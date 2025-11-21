@@ -42,7 +42,7 @@ jobs:
     - name: Prepare PKG Root
       run: |
         mkdir -p pkgroot/usr/local/lib/jstorrent-native
-        cp target/release/jstorrent-native-host pkgroot/usr/local/lib/jstorrent-native/
+        cp target/release/jstorrent-host pkgroot/usr/local/lib/jstorrent-native/jstorrent-native-host
         cp installers/macos/scripts/uninstall.sh pkgroot/usr/local/lib/jstorrent-native/
         cp manifests/com.jstorrent.native.json.template pkgroot/usr/local/lib/jstorrent-native/
         
@@ -79,7 +79,7 @@ jobs:
     - name: Create Tarball
       run: |
         mkdir -p dist
-        cp target/release/jstorrent-native-host dist/
+        cp target/release/jstorrent-host dist/jstorrent-native-host
         cp installers/linux/install.sh dist/
         cp installers/linux/uninstall.sh dist/
         mkdir -p dist/manifests

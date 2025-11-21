@@ -35,7 +35,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "..\..\target\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\target\release\jstorrent-host.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
 Source: "..\..\manifests\com.jstorrent.native.json.template"; DestDir: "{app}"; DestName: "com.jstorrent.native.json"; Flags: ignoreversion
 
 [Registry]
