@@ -1,81 +1,90 @@
-# User Prompts & Actions
+# User Prompts & Actions Log
 
-This document records the user prompts provided during the development of the JSTorrent Native Host and the corresponding actions taken.
+## Prompt 1
+> the builds for all 3 platforms failed with the same error: This request has been automatically failed because it uses a deprecated version of `actions/upload-artifact: v3`. Learn more: https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/
 
-## 1. Initial Host Implementation
-**Prompt:** Develop a minimal, cross-platform syscall proxy in Rust for a Chrome extension...
-**Actions:**
-- Created Rust project structure.
-- Implemented IPC, TCP/UDP, File I/O, Path Safety, Atomic Move, Folder Picker, Hashing.
-- **Artifacts:** `01_tasks_host.md`, `01_implementation_plan_host.md`, `01_walkthrough_host.md`.
+**Action:** Upgraded `actions/upload-artifact` and `actions/checkout` to v4 in `.github/workflows/build-and-package.yml`.
 
-## 2. Installer Implementation
-**Prompt:** Create install packages for the JSTorrent Native Host binary across Windows, macOS, and Linux...
-**Actions:**
-- Created Inno Setup script (Windows), pkg scripts (macOS), shell scripts (Linux).
-- Created GitHub Actions workflow.
-- **Artifacts:** `02_tasks_installers.md`, `02_implementation_plan_installers.md`.
+## Prompt 2
+> please add a README to the repository but keep it fairly brief and link to other documents contained in the repo such as design documents.
 
-## 3. CI Fixes (Artifact Upload Deprecation)
-**Prompt:** the builds for all 3 platforms failed with the same error: This request has been automatically failed because it uses a deprecated version of `actions/upload-artifact: v3`...
-**Actions:**
-- Upgraded `actions/upload-artifact` and `actions/checkout` to v4.
+**Action:** Created `README.md` with project overview and links to design docs.
 
-## 4. Documentation (README)
-**Prompt:** please add a README to the repository but keep it fairly brief and link to other documents...
-**Actions:**
-- Created `README.md`.
+## Prompt 3
+> the linux build fails with this error
+>
+> warning: glib-sys@0.18.1: 
+> error: failed to run custom build command for `glib-sys v0.18.1`
+> ...
+> The system library `glib-2.0` required by crate `glib-sys` was not found.
 
-## 5. Linux Build Fix (Dependencies)
-**Prompt:** the linux build fails with this error... The system library `glib-2.0` required by crate `glib-sys` was not found...
-**Actions:**
-- Added `libgtk-3-dev` installation to Linux CI job.
+**Action:** Added `libgtk-3-dev` installation step to the Linux CI job.
 
-## 6. CI Fixes (Set-Output Deprecation)
-**Prompt:** there is also a repeated warning for the linux build: The `set-output` command is deprecated...
-**Actions:**
-- Replaced `actions-rs/toolchain` with `dtolnay/rust-toolchain`.
+## Prompt 4
+> there is also a repeated warning for the linux build: The `set-output` command is deprecated and will be disabled soon. Please upgrade to using Environment Files. For more information see: https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands/
 
-## 7. Windows Build Fix (PowerShell)
-**Prompt:** the windows compiler installer step fails with this message... Unexpected token 'installers\windows\jstorrent.iss'...
-**Actions:**
-- Added `&` operator to Inno Setup command in CI.
+**Action:** Replaced `actions-rs/toolchain` with `dtolnay/rust-toolchain` to resolve deprecation warnings.
 
-## 8. macOS Build Fix (Binary Name)
-**Prompt:** the macos prepare pkg root step fails... cp: target/release/jstorrent-native-host: No such file or directory...
-**Actions:**
-- Corrected binary name mismatch (`jstorrent-host` vs `jstorrent-native-host`) in CI and Windows installer.
+## Prompt 5
+> the windows compiler installer step fails with this message:
+> Run "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installers\windows\jstorrent.iss
+> ParserError: D:\a\_temp\41489625-1824-4960-94ca-aa301229668e.ps1:2
+> ...
+> Unexpected token 'installers\windows\jstorrent.iss' in expression or statement.
 
-## 9. Windows Installer Fix (Type Mismatch)
-**Prompt:** for the windows installer, under compile installer, i see this error... Type mismatch...
-**Actions:**
-- Fixed `jstorrent.iss` to use `AnsiString` for `LoadStringFromFile`.
+**Action:** Added `&` operator to the Inno Setup command in the CI workflow to fix PowerShell syntax.
 
-## 10. Release Management
-**Prompt:** all the builds are succeeding now... i would like to provide links to the installers from the releases section... please provide me with instructions...
-**Actions:**
-- Created `release-management.md`.
-- Updated CI to trigger on tags and upload release assets.
+## Prompt 6
+> the macos prepare pkg root step fails with this error
+>
+> Run mkdir -p pkgroot/usr/local/lib/jstorrent-native
+> cp: target/release/jstorrent-native-host: No such file or directory
+> Error: Process completed with exit code 1.
+>
+> please stop immediately committing and pushing after each prompt. i will manually commit and push myself from now on, since there are typically several errors and i don't want to unnecessarily run the CI too frequently.
 
-## 11. Release Permissions
-**Prompt:** i created a tag (v0.0.1) and pushed it... GitHub release failed with status: 403...
-**Actions:**
-- Added `permissions: contents: write` to CI workflow.
+**Action:** Corrected the binary name mismatch in CI (`jstorrent-host` -> `jstorrent-native-host`) and updated `jstorrent.iss`. Stopped auto-committing.
 
-## 12. One-Line Installer
-**Prompt:** i would like to provide linux users with a command they can paste into their terminal... `curl .. | bash`...
-**Actions:**
-- Created `docs/install.sh`.
-- Updated `README.md` with install instructions.
+## Prompt 7
+> for the windows installer, under compile installer, i see this error. Parsing [Languages] section, line 34
+> ...
+> Error on line 60 in D:\a\jstorrent-native-host\jstorrent-native-host\installers\windows\jstorrent.iss: Column 58:
+> Type mismatch.
 
-## 13. GitHub Pages
-**Prompt:** can you please setup github pages for this repository... also create a small html page...
-**Actions:**
-- Created `docs/index.html`.
-- Created `deploy-pages.yml` workflow.
+**Action:** Fixed `jstorrent.iss` to use `AnsiString` for `LoadStringFromFile` to resolve type mismatch.
 
-## 14. Artifact Archival
-**Prompt:** please add further implementation notes... into the vibe_artifacts folder...
-**Actions:**
-- Archived internal artifacts to `vibe_artifacts/` with sequential naming.
-- Created `03_summary_ci_release.md`.
+## Prompt 8
+> all the builds are succeeding now. i've made the repository public (at https://github.com/kzahel/jstorrent-native-host) so you should be able to verify yourself. i would like to provide links to the installers from the releases section on github. please let me know how that can be done and whether it's possible to have a bleeding "main" branch release or if i need to manually tag or do something to trigger a release. please provide me with instructions or a document on how i can manage the releases.
+
+**Action:** Created `release-management.md` and updated CI to trigger releases on tags (`v*`) using `softprops/action-gh-release`.
+
+## Prompt 9
+> i created a tag (v0.0.1) and pushed it, now in the github actions under the release step i see this error: 
+>
+> Run softprops/action-gh-release@v1
+> 👩‍🏭 Creating new GitHub release for tag v0.0.1...
+> ⚠️ GitHub release failed with status: 403
+
+**Action:** Added `permissions: contents: write` to the CI workflow to allow release creation.
+
+## Prompt 10
+> i would like to provide linux users with a command they can paste into their terminal that will download the latest release from github and install it and clean any temporary files. (`curl .. | bash`) or (`wget .. | bash`) like lots of other applications provide. if the user is not on linux (for example if they run on mac) it should just point them to the github releases page for the project. i would like the script to be hosted on github pages in this repository. it should be called just `install.sh` and the user will run it like this: `curl -fsSL https://kyle.graehl.org/jstorrent-native-host/install.sh | bash` (that's the github pages url for this repository)
+>
+> it should also print out an error if the user has the wrong platform or architecture. this script is only meant to run on linux. please add to the readme install instructions for each platform (win/mac -> download installer from releases page) (linux -> use curl|bash command)
+
+**Action:** Created `docs/install.sh` script and updated `README.md` with the one-line install command.
+
+## Prompt 11
+> can you please setup github pages for this repository so that this install.sh file will be reachable. also create a small html page so if the user visits https://kyle.graehl.org/jstorrent-native-host/ it just links to the github page (please visit the github page for install instructions...)
+
+**Action:** Created `docs/index.html` and `deploy-pages.yml` workflow to publish the `docs` folder to GitHub Pages.
+
+## Prompt 12
+> please add further implementation notes (notes/walkthrough/prompts/tasks) from your internal antigravity brain into the vibe_artifacts folder. they should be named sequentially like 01_tasks 02_tasks etc. i'd like to have a record of the prompts and plans you created. for small bugfixes and build errors those can be omitted or coalesced or added in summary format (05_summary), but for the main or larger changes or features we want to include those.
+
+**Action:** Archived internal artifacts to `vibe_artifacts/` (01_tasks_host, 02_tasks_installers, etc.) and created `03_summary_ci_release.md`.
+
+## Prompt 13
+> the 01_prompts_host.md is inaccurate. perhaps instead just include all the prompts that i typed to you instead. into a single user_prompts.md file and have it cross reference other documents or summarize the actinons you took after the prompts.
+
+**Action:** Replaced `01_prompts_host.md` with this `user_prompts.md` file containing verbatim prompts.
