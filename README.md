@@ -41,6 +41,6 @@ curl -fsSL https://kyle.graehl.org/jstorrent-native-host/install.sh | bash
 #### Windows & macOS
 1.  Go to the [Releases Page](https://github.com/kzahel/jstorrent-native-host/releases/latest).
 2.  Download the installer for your platform:
-    - **Windows**: `jstorrent-native-host-windows-x86_64.exe`
-    - **macOS**: `jstorrent-native-host-macos-x86_64.pkg`
+    - **Windows**: `jstorrent-native-host-install-windows-x86_64.exe`
+    - **macOS**: `jstorrent-native-host-install-macos-x86_64.pkg`
 3.  Run the installer.

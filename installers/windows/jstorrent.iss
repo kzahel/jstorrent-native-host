@@ -23,7 +23,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
-OutputBaseFilename=jstorrent-native-host-windows-x86_64
+OutputBaseFilename=jstorrent-native-host-install-windows-x86_64
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
