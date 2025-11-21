@@ -3,6 +3,8 @@ name: Build and Package
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -27,6 +29,12 @@ jobs:
       with:
         name: windows-installer
         path: installers/windows/Output/jstorrent-installer.exe
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: installers/windows/Output/jstorrent-installer.exe
 
   build-macos:
     runs-on: macos-latest
@@ -60,6 +68,12 @@ jobs:
         name: macos-installer
         path: jstorrent-native-host.pkg
 
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: jstorrent-native-host.pkg
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -92,3 +106,9 @@ jobs:
       with:
         name: linux-installer
         path: jstorrent-native-host-linux-x86_64.tar.gz
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: jstorrent-native-host-linux-x86_64.tar.gz
