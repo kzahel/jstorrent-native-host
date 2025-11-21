@@ -30,4 +30,17 @@ cargo build --release
 ```
 
 ### Install
-Please refer to the `installers/` directory for platform-specific installation scripts.
+
+#### Linux (One-Line Install)
+Run the following command in your terminal:
+```bash
+curl -fsSL https://kyle.graehl.org/jstorrent-native-host/install.sh | bash
+```
+*(Note: Requires `curl` and `bash`)*
+
+#### Windows & macOS
+1.  Go to the [Releases Page](https://github.com/kzahel/jstorrent-native-host/releases/latest).
+2.  Download the installer for your platform:
+    - **Windows**: `jstorrent-installer.exe`
+    - **macOS**: `jstorrent-native-host.pkg`
+3.  Run the installer.
