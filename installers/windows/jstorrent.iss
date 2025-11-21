@@ -47,6 +47,7 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   ManifestPath: String;
   ManifestContent: String;
+  FileContent: AnsiString;
   InstalledPath: String;
 begin
   if CurStep = ssPostInstall then
@@ -57,10 +58,11 @@ begin
     // JSON requires double backslashes
     StringChange(InstalledPath, '\', '\\');
     
-    if LoadStringFromFile(ManifestPath, ManifestContent) then
+    if LoadStringFromFile(ManifestPath, FileContent) then
     begin
+      ManifestContent := String(FileContent);
       StringChange(ManifestContent, 'HOST_PATH_PLACEHOLDER', InstalledPath);
-      SaveStringToFile(ManifestPath, ManifestContent, False);
+      SaveStringToFile(ManifestPath, AnsiString(ManifestContent), False);
     end;
   end;
 end;
