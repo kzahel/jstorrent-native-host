@@ -45,29 +45,35 @@ curl -fsSL https://kyle.graehl.org/jstorrent-native-host/install.sh | bash
     - **macOS**: `jstorrent-native-host-install-macos-x86_64.pkg`
 3.  Run the installer.
 
-## Magnet Link Handling
+## Link & File Handling
 
-The host supports handling `magnet:` links via a separate stub binary (`jstorrent-magnet-stub`).
+The host supports handling both `magnet:` links and `.torrent` files via a unified stub binary (`jstorrent-link-handler`).
 
 ### Architecture
-1.  **Stub Binary**: Registered as the OS handler for `magnet:` scheme.
+1.  **Stub Binary**: Registered as the OS handler for `magnet:` scheme and `.torrent` file extension.
 2.  **Discovery**: The stub finds running host instances by looking for `rpc-info-*.json` files in the config directory.
 3.  **RPC**: The stub communicates with the host via a local HTTP server (port and token found in discovery file).
-4.  **Fallback**: If no host is running, the stub launches the browser to handle the link (via the extension).
+    - For magnets: `POST /add-magnet`
+    - For torrents: `POST /add-torrent` (sends file contents)
+4.  **Fallback**: If no host is running, the stub launches the browser to handle the link/file (via the extension).
 
 ## Development & Testing
 
 ### Running Integration Tests
 
-To verify the magnet handler integration:
+To verify the integration:
 
 1.  Build the project:
     ```bash
     cargo build
     ```
-2.  Run the verification script:
+2.  Run the verification scripts:
     ```bash
+    # Verify magnet link handling
     python3 verify_magnet.py
+
+    # Verify .torrent file handling
+    python3 verify_torrent.py
     ```
 
-This script starts the host, waits for initialization, runs the stub with a magnet link, and verifies that the host receives the `MagnetAdded` event.
+These scripts start the host, wait for initialization, run the stub with a magnet link or torrent file, and verify that the host receives the corresponding event (`MagnetAdded` or `TorrentAdded`).
