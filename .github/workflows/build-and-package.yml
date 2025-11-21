@@ -31,13 +31,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-installer
-        path: installers/windows/Output/jstorrent-installer.exe
+        path: installers/windows/Output/jstorrent-native-host-windows-x86_64.exe
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: installers/windows/Output/jstorrent-installer.exe
+        files: installers/windows/Output/jstorrent-native-host-windows-x86_64.exe
 
   build-macos:
     runs-on: macos-latest
@@ -63,19 +63,19 @@ jobs:
                  --identifier com.jstorrent.native \
                  --version 0.1.0 \
                  --scripts installers/macos/scripts \
-                 jstorrent-native-host.pkg
+                 jstorrent-native-host-macos-x86_64.pkg
                  
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: macos-installer
-        path: jstorrent-native-host.pkg
+        path: jstorrent-native-host-macos-x86_64.pkg
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: jstorrent-native-host.pkg
+        files: jstorrent-native-host-macos-x86_64.pkg
 
   build-linux:
     runs-on: ubuntu-latest
