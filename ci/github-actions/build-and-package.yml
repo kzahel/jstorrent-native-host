@@ -1,0 +1,98 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        
+    - name: Build Release
+      run: cargo build --release
+      
+    - name: Compile Installer
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installers\windows\jstorrent.iss
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-installer
+        path: installers/windows/Output/jstorrent-installer.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        
+    - name: Build Release
+      run: cargo build --release
+      
+    - name: Prepare PKG Root
+      run: |
+        mkdir -p pkgroot/usr/local/lib/jstorrent-native
+        cp target/release/jstorrent-native-host pkgroot/usr/local/lib/jstorrent-native/
+        cp installers/macos/scripts/uninstall.sh pkgroot/usr/local/lib/jstorrent-native/
+        cp manifests/com.jstorrent.native.json.template pkgroot/usr/local/lib/jstorrent-native/
+        
+    - name: Build PKG
+      run: |
+        pkgbuild --root pkgroot \
+                 --identifier com.jstorrent.native \
+                 --version 0.1.0 \
+                 --scripts installers/macos/scripts \
+                 jstorrent-native-host.pkg
+                 
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: macos-installer
+        path: jstorrent-native-host.pkg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        
+    - name: Build Release
+      run: cargo build --release
+      
+    - name: Create Tarball
+      run: |
+        mkdir -p dist
+        cp target/release/jstorrent-native-host dist/
+        cp installers/linux/install.sh dist/
+        cp installers/linux/uninstall.sh dist/
+        mkdir -p dist/manifests
+        cp manifests/com.jstorrent.native.json.template dist/manifests/
+        
+        tar -czvf jstorrent-native-host-linux-x86_64.tar.gz -C dist .
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-installer
+        path: jstorrent-native-host-linux-x86_64.tar.gz
