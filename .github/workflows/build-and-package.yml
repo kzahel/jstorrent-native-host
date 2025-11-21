@@ -10,7 +10,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -26,7 +26,7 @@ jobs:
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installers\windows\jstorrent.iss
         
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-installer
         path: installers/windows/Output/jstorrent-installer.exe
@@ -34,7 +34,7 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -61,7 +61,7 @@ jobs:
                  jstorrent-native-host.pkg
                  
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: macos-installer
         path: jstorrent-native-host.pkg
@@ -69,7 +69,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install Rust
       uses: actions-rs/toolchain@v1
@@ -92,7 +92,7 @@ jobs:
         tar -czvf jstorrent-native-host-linux-x86_64.tar.gz -C dist .
         
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux-installer
         path: jstorrent-native-host-linux-x86_64.tar.gz
