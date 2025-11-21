@@ -154,4 +154,7 @@ pub enum Event {
         socket_id: u32,
         error: String,
     },
+    MagnetAdded {
+        link: String,
+    },
 }

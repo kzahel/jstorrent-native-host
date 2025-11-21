@@ -44,3 +44,30 @@ curl -fsSL https://kyle.graehl.org/jstorrent-native-host/install.sh | bash
     - **Windows**: `jstorrent-native-host-install-windows-x86_64.exe`
     - **macOS**: `jstorrent-native-host-install-macos-x86_64.pkg`
 3.  Run the installer.
+
+## Magnet Link Handling
+
+The host supports handling `magnet:` links via a separate stub binary (`jstorrent-magnet-stub`).
+
+### Architecture
+1.  **Stub Binary**: Registered as the OS handler for `magnet:` scheme.
+2.  **Discovery**: The stub finds running host instances by looking for `rpc-info-*.json` files in the config directory.
+3.  **RPC**: The stub communicates with the host via a local HTTP server (port and token found in discovery file).
+4.  **Fallback**: If no host is running, the stub launches the browser to handle the link (via the extension).
+
+## Development & Testing
+
+### Running Integration Tests
+
+To verify the magnet handler integration:
+
+1.  Build the project:
+    ```bash
+    cargo build
+    ```
+2.  Run the verification script:
+    ```bash
+    python3 verify_magnet.py
+    ```
+
+This script starts the host, waits for initialization, runs the stub with a magnet link, and verifies that the host receives the `MagnetAdded` event.

@@ -11,7 +11,7 @@ pub struct UdpState {
 }
 
 pub async fn open_udp(
-    state: &mut State,
+    state: &State,
     bind_host: Option<String>,
     bind_port: Option<u16>,
     event_tx: mpsc::Sender<Event>,
@@ -28,6 +28,8 @@ pub async fn open_udp(
 
     state
         .udp_sockets
+        .lock()
+        .unwrap()
         .insert(socket_id, UdpState { socket: socket.clone() });
 
     // Spawn read task
@@ -70,14 +72,14 @@ pub async fn open_udp(
 }
 
 pub async fn send_udp(
-    state: &mut State,
+    state: &State,
     socket_id: u32,
     remote_host: String,
     remote_port: u16,
     data_b64: String,
 ) -> Result<ResponsePayload> {
-    let socket_state = state
-        .udp_sockets
+    let sockets = state.udp_sockets.lock().unwrap();
+    let socket_state = sockets
         .get(&socket_id)
         .context("Socket not found")?;
 
@@ -95,8 +97,8 @@ pub async fn send_udp(
     Ok(ResponsePayload::Empty)
 }
 
-pub async fn close_udp(state: &mut State, socket_id: u32) -> Result<ResponsePayload> {
-    if state.udp_sockets.remove(&socket_id).is_some() {
+pub async fn close_udp(state: &State, socket_id: u32) -> Result<ResponsePayload> {
+    if state.udp_sockets.lock().unwrap().remove(&socket_id).is_some() {
         Ok(ResponsePayload::Empty)
     } else {
         Err(anyhow::anyhow!("Socket not found"))

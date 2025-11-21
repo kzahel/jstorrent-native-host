@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use tokio::fs::{self, File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt, SeekFrom};
 
-pub async fn set_download_root(state: &mut State, path: String) -> Result<ResponsePayload> {
+pub async fn set_download_root(state: &State, path: String) -> Result<ResponsePayload> {
     let path_buf = PathBuf::from(path);
     if !path_buf.exists() {
         return Err(anyhow!("Download root does not exist"));
@@ -16,21 +16,13 @@ pub async fn set_download_root(state: &mut State, path: String) -> Result<Respon
         .canonicalize()
         .context("Failed to canonicalize download root")?;
     
-    state.download_root = Some(canonical);
+    *state.download_root.lock().unwrap() = canonical;
     Ok(ResponsePayload::Empty)
 }
 
-pub async fn ensure_dir(state: &mut State, path: String) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
-    
-    // For ensure_dir, the path might not exist, so validate_path might need to handle that.
-    // Our validate_path implementation handles non-existing paths by checking the parent.
-    // But ensure_dir might create multiple levels.
-    // We should validate that the *target* path is inside the root.
-    // Since validate_path returns a safe absolute path if it's inside root...
+pub async fn ensure_dir(state: &State, path: String) -> Result<ResponsePayload> {
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
     
     let safe_path = validate_path(&path, root)?;
     
@@ -42,15 +34,13 @@ pub async fn ensure_dir(state: &mut State, path: String) -> Result<ResponsePaylo
 }
 
 pub async fn read_file(
-    state: &mut State,
+    state: &State,
     path: String,
     offset: u64,
     length: usize,
 ) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
     
     let safe_path = validate_path(&path, root)?;
     
@@ -72,15 +62,13 @@ pub async fn read_file(
 }
 
 pub async fn write_file(
-    state: &mut State,
+    state: &State,
     path: String,
     offset: u64,
     data_b64: String,
 ) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
     
     let safe_path = validate_path(&path, root)?;
     
@@ -108,11 +96,9 @@ pub async fn write_file(
     Ok(ResponsePayload::Empty)
 }
 
-pub async fn stat_file(state: &mut State, path: String) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
+pub async fn stat_file(state: &State, path: String) -> Result<ResponsePayload> {
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
     
     let safe_path = validate_path(&path, root)?;
     

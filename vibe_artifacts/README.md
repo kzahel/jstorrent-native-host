@@ -28,6 +28,14 @@ The project was developed through the following agentic workflow:
 ## Contents
 
 - **`task.md`**: The detailed checklist of tasks tracked during development.
+- `01_tasks_host.md`: Initial task list for host setup.
+- `02_implementation_plan_installers.md`: Plan for installer implementation.
+- `03_summary_ci_release.md`: Summary of CI/CD and release management work.
+- `04_tasks_magnet.md`: Task list for magnet handler implementation.
+- `05_plan_magnet.md`: Implementation plan for magnet handler.
+- `06_walkthrough_magnet.md`: Walkthrough of magnet handler changes.
+- `07_summary_magnet.md`: Summary of magnet handler implementation.
+- `user_prompts.md`: Log of user prompts and actions.
 - **`implementation_plan.md`**: The technical plan approved before coding began.
 - **`walkthrough.md`**: A summary of the implemented features and verification results.
 - **`prompts.md`**: A record of the user prompts that drove the development.

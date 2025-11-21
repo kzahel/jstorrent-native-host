@@ -3,7 +3,7 @@ use crate::state::State;
 use anyhow::{anyhow, Result};
 use rfd::AsyncFileDialog;
 
-pub async fn pick_download_directory(state: &mut State) -> Result<ResponsePayload> {
+pub async fn pick_download_directory(state: &State) -> Result<ResponsePayload> {
     let task = AsyncFileDialog::new()
         .set_title("Select Download Directory")
         .pick_folder();
@@ -21,7 +21,7 @@ pub async fn pick_download_directory(state: &mut State) -> Result<ResponsePayloa
             let path_str = canonical.to_string_lossy().to_string();
             
             // Update state
-            state.download_root = Some(canonical);
+            *state.download_root.lock().unwrap() = canonical;
             
             Ok(ResponsePayload::Path { path: path_str })
         }

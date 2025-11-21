@@ -20,4 +20,14 @@ sed "s|HOST_PATH_PLACEHOLDER|$BINARY_PATH|g" "$MANIFEST_TEMPLATE" > "$MANIFEST_D
 # Set permissions for manifest
 chmod 644 "$MANIFEST_DEST"
 
+# Register the magnet handler app
+APP_PATH="/Applications/JSTorrentMagnetHandler.app"
+if [ -d "$APP_PATH" ]; then
+    # Ensure binary is executable
+    chmod 755 "$APP_PATH/Contents/MacOS/jstorrent-magnet-stub"
+    
+    # Force registration with LaunchServices
+    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP_PATH"
+fi
+
 exit 0

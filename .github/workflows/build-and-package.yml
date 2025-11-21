@@ -52,10 +52,16 @@ jobs:
       
     - name: Prepare PKG Root
       run: |
+        # Native Host
         mkdir -p pkgroot/usr/local/lib/jstorrent-native
         cp target/release/jstorrent-host pkgroot/usr/local/lib/jstorrent-native/jstorrent-native-host
         cp installers/macos/scripts/uninstall.sh pkgroot/usr/local/lib/jstorrent-native/
         cp manifests/com.jstorrent.native.json.template pkgroot/usr/local/lib/jstorrent-native/
+        
+        # Magnet Handler App
+        mkdir -p pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/MacOS
+        cp target/release/jstorrent-magnet-stub pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/MacOS/jstorrent-magnet-stub
+        cp installers/macos/Info.plist pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/
         
     - name: Build PKG
       run: |
@@ -97,6 +103,7 @@ jobs:
       run: |
         mkdir -p dist
         cp target/release/jstorrent-host dist/jstorrent-native-host
+        cp target/release/jstorrent-magnet-stub dist/jstorrent-magnet-stub
         cp installers/linux/install.sh dist/
         cp installers/linux/uninstall.sh dist/
         mkdir -p dist/manifests

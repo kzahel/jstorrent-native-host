@@ -35,11 +35,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "..\..\target\release\jstorrent-host.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
+Source: "..\..\target\release\jstorrent-host.exe"; DestDir: "{app}"; DestName: "jstorrent-native-host.exe"; Flags: ignoreversion
+Source: "..\..\target\release\jstorrent-magnet-stub.exe"; DestDir: "{app}"; DestName: "jstorrent-magnet-stub.exe"; Flags: ignoreversion
 Source: "..\..\manifests\com.jstorrent.native.json.template"; DestDir: "{app}"; DestName: "com.jstorrent.native.json"; Flags: ignoreversion
 
 [Registry]
+; Chrome Native Messaging Host
 Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\com.jstorrent.native"; ValueType: string; ValueName: ""; ValueData: "{app}\com.jstorrent.native.json"; Flags: uninsdeletekey
+; Magnet Protocol Handler
+Root: HKCR; Subkey: "magnet"; ValueType: string; ValueName: ""; ValueData: "URL:BitTorrent Magnet Link"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "magnet"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Flags: uninsdeletekey
+Root: HKCR; Subkey: "magnet\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\jstorrent-magnet-stub.exe"" ""%1"""; Flags: uninsdeletekey
 
 [Code]
 // We need to replace HOST_PATH_PLACEHOLDER in the manifest with the actual path

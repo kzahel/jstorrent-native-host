@@ -9,23 +9,34 @@ BINARY_NAME="jstorrent-native-host"
 # Create install directory
 mkdir -p "$INSTALL_DIR"
 
-# Copy binary
-cp "$BINARY_NAME" "$INSTALL_DIR/"
-chmod 755 "$INSTALL_DIR/$BINARY_NAME"
+# Install binaries
+cp "$DIST_DIR/jstorrent-native-host" "$INSTALL_DIR/"
+cp "$DIST_DIR/jstorrent-magnet-stub" "$INSTALL_DIR/"
+chmod 755 "$INSTALL_DIR/jstorrent-native-host"
+chmod 755 "$INSTALL_DIR/jstorrent-magnet-stub"
 
-# Copy uninstall script
-cp "installers/linux/uninstall.sh" "$INSTALL_DIR/"
+# Install uninstall script
+cp "$DIST_DIR/uninstall.sh" "$INSTALL_DIR/"
 chmod 755 "$INSTALL_DIR/uninstall.sh"
 
-# Create manifest directory
-mkdir -p "$MANIFEST_DIR"
+# Create manifest
+sed "s|HOST_PATH_PLACEHOLDER|$INSTALL_DIR/jstorrent-native-host|g" "$DIST_DIR/manifests/com.jstorrent.native.json.template" > "$MANIFEST_DIR/com.jstorrent.native.json"
+chmod 644 "$MANIFEST_DIR/com.jstorrent.native.json"
 
-# Generate manifest
-MANIFEST_DEST="$MANIFEST_DIR/com.jstorrent.native.json"
-BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
+# Create Desktop Entry for Magnet Handler
+DESKTOP_FILE="$HOME/.local/share/applications/jstorrent-magnet.desktop"
+mkdir -p "$HOME/.local/share/applications"
 
-sed "s|HOST_PATH_PLACEHOLDER|$BINARY_PATH|g" "$MANIFEST_TEMPLATE" > "$MANIFEST_DEST"
-chmod 644 "$MANIFEST_DEST"
+cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Name=JSTorrent Magnet Handler
+Exec=$INSTALL_DIR/jstorrent-magnet-stub %u
+Type=Application
+MimeType=x-scheme-handler/magnet;
+NoDisplay=true
+EOF
 
-echo "JSTorrent Native Host installed successfully."
-echo "To uninstall, run: $INSTALL_DIR/uninstall.sh"
+# Register mime type
+xdg-mime default jstorrent-magnet.desktop x-scheme-handler/magnet
+
+echo "Installation complete."

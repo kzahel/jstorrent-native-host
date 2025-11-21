@@ -22,15 +22,13 @@ pub async fn hash_sha1(data_b64: String) -> Result<ResponsePayload> {
 }
 
 pub async fn hash_file(
-    state: &mut State,
+    state: &State,
     path: String,
     offset: u64,
     length: usize,
 ) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
     
     let safe_path = validate_path(&path, root)?;
     

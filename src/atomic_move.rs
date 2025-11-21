@@ -5,15 +5,13 @@ use anyhow::{anyhow, Context, Result};
 use tokio::fs;
 
 pub async fn atomic_move(
-    state: &mut State,
+    state: &State,
     from: String,
     to: String,
     overwrite: Option<bool>,
 ) -> Result<ResponsePayload> {
-    let root = state
-        .download_root
-        .as_ref()
-        .ok_or_else(|| anyhow!("Download root not set"))?;
+    let root_guard = state.download_root.lock().unwrap();
+    let root = &*root_guard;
 
     let safe_from = validate_path(&from, root)?;
     let safe_to = validate_path(&to, root)?;

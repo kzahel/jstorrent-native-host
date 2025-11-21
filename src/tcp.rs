@@ -11,7 +11,7 @@ pub struct TcpState {
 }
 
 pub async fn open_tcp(
-    state: &mut State,
+    state: &State,
     host: String,
     port: u16,
     event_tx: mpsc::Sender<Event>,
@@ -24,7 +24,7 @@ pub async fn open_tcp(
     let (mut reader, writer) = stream.into_split();
     let socket_id = state.next_id();
 
-    state.tcp_sockets.insert(socket_id, TcpState { writer });
+    state.tcp_sockets.lock().unwrap().insert(socket_id, TcpState { writer });
 
     // Spawn read task
     tokio::spawn(async move {
@@ -65,12 +65,12 @@ pub async fn open_tcp(
 }
 
 pub async fn write_tcp(
-    state: &mut State,
+    state: &State,
     socket_id: u32,
     data_b64: String,
 ) -> Result<ResponsePayload> {
-    let socket = state
-        .tcp_sockets
+    let mut sockets = state.tcp_sockets.lock().unwrap();
+    let socket = sockets
         .get_mut(&socket_id)
         .context("Socket not found")?;
 
@@ -87,8 +87,8 @@ pub async fn write_tcp(
     Ok(ResponsePayload::Empty)
 }
 
-pub async fn close_tcp(state: &mut State, socket_id: u32) -> Result<ResponsePayload> {
-    if state.tcp_sockets.remove(&socket_id).is_some() {
+pub async fn close_tcp(state: &State, socket_id: u32) -> Result<ResponsePayload> {
+    if state.tcp_sockets.lock().unwrap().remove(&socket_id).is_some() {
         Ok(ResponsePayload::Empty)
     } else {
         Err(anyhow::anyhow!("Socket not found"))

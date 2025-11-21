@@ -1,3 +1,4 @@
+
 mod atomic_move;
 mod folder_picker;
 mod fs;
@@ -5,6 +6,7 @@ mod hashing;
 mod ipc;
 mod path_safety;
 mod protocol;
+mod rpc;
 mod state;
 mod tcp;
 mod udp;
@@ -14,14 +16,46 @@ use protocol::{Event, Operation, Request, Response, ResponsePayload};
 use state::State;
 use tokio::io::{self, AsyncWriteExt};
 use tokio::sync::mpsc;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
 
-    let mut state = State::new();
-    let (event_tx, mut event_rx) = mpsc::channel::<Event>(100);
+    let (event_tx, mut event_rx) = mpsc::channel(32);
+    
+    // Initialize state with event sender
+    let download_root = dirs::download_dir().unwrap_or_else(|| PathBuf::from("."));
+    let state = Arc::new(State::new(download_root, Some(event_tx.clone())));
+
+    // Start RPC server
+    let (port, token) = rpc::start_server(state.clone()).await;
+    
+    // Write discovery file
+    let info = rpc::RpcInfo {
+        version: 1,
+        pid: std::process::id(),
+        port,
+        token,
+        started: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        last_used: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+        browser: rpc::BrowserInfo {
+            name: "Unknown".to_string(), // TODO: Infer from parent process?
+            binary: std::env::current_exe().unwrap_or_default().to_string_lossy().to_string(),
+            profile_id: "Default".to_string(), // TODO: Infer from args/env
+            profile_path: None,
+            extension_id: None, // TODO: Infer
+        },
+    };
+    
+    if let Err(e) = rpc::write_discovery_file(info) {
+        eprintln!("Failed to write discovery file: {}", e);
+    }
+
+    // Spawn a task to read from stdin
+    let (req_tx, mut req_rx) = mpsc::channel::<Event>(100);
 
     loop {
         tokio::select! {
@@ -37,7 +71,7 @@ async fn main() -> Result<()> {
                             }
                         };
 
-                        let response = handle_request(&mut state, req, event_tx.clone()).await;
+                        let response = handle_request(&state, req, event_tx.clone()).await;
                         if let Err(e) = ipc::write_message(&mut stdout, &response).await {
                             eprintln!("Failed to write response: {}", e);
                             break;
@@ -68,7 +102,7 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_request(
-    state: &mut State,
+    state: &State,
     req: Request,
     event_tx: mpsc::Sender<Event>,
 ) -> Response {
