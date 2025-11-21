@@ -24,7 +24,7 @@ chmod 644 "$MANIFEST_DEST"
 APP_PATH="/Applications/JSTorrentMagnetHandler.app"
 if [ -d "$APP_PATH" ]; then
     # Ensure binary is executable
-    chmod 755 "$APP_PATH/Contents/MacOS/jstorrent-magnet-stub"
+    chmod 755 "$APP_PATH/Contents/MacOS/jstorrent-link-handler"
     
     # Force registration with LaunchServices
     /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP_PATH"

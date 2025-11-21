@@ -60,7 +60,7 @@ jobs:
         
         # Magnet Handler App
         mkdir -p pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/MacOS
-        cp target/release/jstorrent-magnet-stub pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/MacOS/jstorrent-magnet-stub
+        cp target/release/jstorrent-link-handler pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/MacOS/jstorrent-link-handler
         cp installers/macos/Info.plist pkgroot/Applications/JSTorrentMagnetHandler.app/Contents/
         
     - name: Build PKG
@@ -103,7 +103,7 @@ jobs:
       run: |
         mkdir -p dist
         cp target/release/jstorrent-host dist/jstorrent-native-host
-        cp target/release/jstorrent-magnet-stub dist/jstorrent-magnet-stub
+        cp target/release/jstorrent-link-handler dist/jstorrent-link-handler
         cp installers/linux/install.sh dist/
         cp installers/linux/uninstall.sh dist/
         mkdir -p dist/manifests
