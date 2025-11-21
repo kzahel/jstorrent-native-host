@@ -6,17 +6,27 @@ import time
 import os
 import requests
 import shutil
+import base64
 
 # Configuration
 HOST_BINARY = "./target/debug/jstorrent-host"
 STUB_BINARY = "./target/debug/jstorrent-link-handler"
 CONFIG_DIR = os.path.expanduser("~/.config/jstorrent-native-host")
+TEST_TORRENT_FILE = "test.torrent"
 
 def setup():
     # Clean config dir
     if os.path.exists(CONFIG_DIR):
         shutil.rmtree(CONFIG_DIR)
     os.makedirs(CONFIG_DIR, exist_ok=True)
+    
+    # Create dummy torrent file
+    with open(TEST_TORRENT_FILE, "wb") as f:
+        f.write(b"d8:announce35:udp://tracker.openbittorrent.com:8013:creation datei1327049827e4:infod6:lengthi12345e4:name10:test.files12:piece lengthi262144e6:pieces20:01234567890123456789ee")
+
+def cleanup():
+    if os.path.exists(TEST_TORRENT_FILE):
+        os.remove(TEST_TORRENT_FILE)
 
 def read_message(proc):
     raw_length = proc.stdout.read(4)
@@ -26,14 +36,7 @@ def read_message(proc):
     msg = proc.stdout.read(msg_length)
     return json.loads(msg)
 
-def send_message(proc, msg):
-    msg_json = json.dumps(msg)
-    msg_bytes = msg_json.encode('utf-8')
-    header = struct.pack('=I', len(msg_bytes))
-    proc.stdin.write(header + msg_bytes)
-    proc.stdin.flush()
-
-def test_magnet_flow():
+def test_torrent_flow():
     print("Starting Host...")
     host_proc = subprocess.Popen(
         [HOST_BINARY],
@@ -70,12 +73,11 @@ def test_magnet_flow():
             return False
         print("Health check passed")
         
-        # Test Stub
-        magnet_link = "magnet:?xt=urn:btih:1234567890abcdef1234567890abcdef12345678&dn=Test"
-        print(f"Running stub with magnet link: {magnet_link}")
+        # Test Stub with .torrent file
+        print(f"Running stub with torrent file: {TEST_TORRENT_FILE}")
         
         stub_proc = subprocess.run(
-            [STUB_BINARY, magnet_link],
+            [STUB_BINARY, TEST_TORRENT_FILE],
             capture_output=True,
             text=True
         )
@@ -88,26 +90,25 @@ def test_magnet_flow():
         print("Stub executed successfully")
         
         # Verify Host received the event
-        # We need to read from host stdout. 
-        # The host should emit a MagnetAdded event.
-        
-        # We might have missed it if it happened too fast? 
-        # No, the host writes to stdout which is a pipe. We can read it.
-        
-        # Note: The host loop reads stdin. If we don't send anything, it blocks on read_message.
-        # But the RPC handler sends to event_tx, which the main loop selects on.
-        # So it should wake up and write to stdout.
-        
         print("Waiting for event from host...")
         msg = read_message(host_proc)
         print("Received message:", msg)
         
-        if msg and msg.get('event') == 'magnetAdded':
-            if msg.get('link') == magnet_link:
-                print("SUCCESS: Host received magnet link!")
-                return True
+        if msg and msg.get('event') == 'torrentAdded':
+            if msg.get('name') == TEST_TORRENT_FILE:
+                print("SUCCESS: Host received torrent file!")
+                # Verify contents
+                with open(TEST_TORRENT_FILE, "rb") as f:
+                    expected_contents = base64.b64encode(f.read()).decode('utf-8')
+                
+                if msg.get('contentsBase64') == expected_contents:
+                     print("SUCCESS: Contents match!")
+                     return True
+                else:
+                     print("FAIL: Contents mismatch")
+                     return False
             else:
-                print(f"FAIL: Link mismatch. Expected {magnet_link}, got {msg.get('link')}")
+                print(f"FAIL: Name mismatch. Expected {TEST_TORRENT_FILE}, got {msg.get('name')}")
                 return False
         else:
             print("FAIL: Unexpected message or no message")
@@ -119,7 +120,10 @@ def test_magnet_flow():
 
 if __name__ == "__main__":
     setup()
-    if test_magnet_flow():
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    try:
+        if test_torrent_flow():
+            sys.exit(0)
+        else:
+            sys.exit(1)
+    finally:
+        cleanup()

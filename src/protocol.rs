@@ -157,4 +157,10 @@ pub enum Event {
     MagnetAdded {
         link: String,
     },
+    TorrentAdded {
+        name: String,
+        infohash: String,
+        #[serde(rename = "contentsBase64")]
+        contents_base64: String,
+    },
 }

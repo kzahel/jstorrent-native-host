@@ -11,9 +11,9 @@ mkdir -p "$INSTALL_DIR"
 
 # Install binaries
 cp "$DIST_DIR/jstorrent-native-host" "$INSTALL_DIR/"
-cp "$DIST_DIR/jstorrent-magnet-stub" "$INSTALL_DIR/"
+cp target/release/jstorrent-link-handler "$INSTALL_DIR/"
 chmod 755 "$INSTALL_DIR/jstorrent-native-host"
-chmod 755 "$INSTALL_DIR/jstorrent-magnet-stub"
+chmod 755 "$INSTALL_DIR/jstorrent-link-handler"
 
 # Install uninstall script
 cp "$DIST_DIR/uninstall.sh" "$INSTALL_DIR/"

@@ -28,7 +28,7 @@ name = "jstorrent-host"
 path = "src/main.rs"
 
 [[bin]]
-name = "jstorrent-magnet-stub"
+name = "jstorrent-link-handler"
 path = "src/bin/stub.rs"
 
 

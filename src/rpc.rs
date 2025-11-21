@@ -43,6 +43,12 @@ pub struct AddMagnetRequest {
     magnet: String,
 }
 
+#[derive(Deserialize)]
+pub struct AddTorrentRequest {
+    file_name: String,
+    contents_base64: String,
+}
+
 #[derive(Serialize)]
 pub struct HealthResponse {
     status: String,
@@ -63,6 +69,7 @@ pub async fn start_server(state: Arc<AppState>) -> (u16, String) {
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/add-magnet", post(add_magnet_handler))
+        .route("/add-torrent", post(add_torrent_handler))
         .with_state((state, token_clone));
 
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -137,6 +144,41 @@ async fn add_magnet_handler(
     Ok(Json(StatusResponse {
         status: "queued".to_string(),
         message: "Magnet link queued".to_string(),
+    }))
+}
+
+async fn add_torrent_handler(
+    State((state, server_token)): State<(Arc<AppState>, String)>,
+    Query(query): Query<TokenQuery>,
+    Json(payload): Json<AddTorrentRequest>,
+) -> Result<Json<StatusResponse>, StatusCode> {
+    if query.token != server_token {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    if let Some(sender) = &state.event_sender {
+        // We don't parse the torrent here, we just forward it to the extension.
+        // The extension (JS) will handle parsing and adding to the engine.
+        // We'll use a placeholder infohash for now or empty string since we don't parse it here.
+        // Actually, the design doc says "Use metadata as authoritative... Infohash...".
+        // If the host is supposed to parse it, we'd need a bencode parser.
+        // But `jstorrent-host` seems to be a dumb pipe.
+        // Let's check `Cargo.toml` for bencode deps.
+        // No bencode deps. So we probably shouldn't parse it here.
+        // We'll send it to the extension.
+        
+        let event = Event::TorrentAdded {
+            name: payload.file_name,
+            infohash: "".to_string(), // Extension will calculate this
+            contents_base64: payload.contents_base64,
+        };
+        
+        let _ = sender.send(event).await;
+    }
+
+    Ok(Json(StatusResponse {
+        status: "queued".to_string(),
+        message: "Torrent file queued".to_string(),
     }))
 }
 

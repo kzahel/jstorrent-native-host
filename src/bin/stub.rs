@@ -10,8 +10,16 @@ use sysinfo::{Pid, System};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// The magnet link to handle
-    magnet: String,
+    /// The magnet link or torrent file path to handle
+    target: String,
+}
+
+enum Mode {
+    Magnet(String),
+    Torrent {
+        file_name: String,
+        contents_base64: String,
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -43,27 +51,40 @@ struct HealthResponse {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    let magnet = args.magnet;
+    let target = args.target;
 
-    if !magnet.starts_with("magnet:") {
-        eprintln!("Error: Argument is not a magnet link");
-        std::process::exit(1);
-    }
+    let mode = if target.starts_with("magnet:") {
+        Mode::Magnet(target)
+    } else {
+        let path = PathBuf::from(&target);
+        if !path.exists() {
+            eprintln!("Error: File does not exist: {}", target);
+            std::process::exit(1);
+        }
+        let contents = fs::read(&path).context("Failed to read torrent file")?;
+        use base64::{Engine as _, engine::general_purpose};
+        let contents_base64 = general_purpose::STANDARD.encode(contents);
+        
+        Mode::Torrent {
+            file_name: path.file_name().unwrap_or_default().to_string_lossy().to_string(),
+            contents_base64,
+        }
+    };
 
     // 1. Find valid hosts
     let hosts = find_hosts()?;
 
     // 2. Try to connect to a host
     for host in hosts {
-        if try_send_magnet(&host, &magnet).is_ok() {
-            println!("Successfully sent magnet link to host (PID {})", host.pid);
+        if try_send_request(&host, &mode).is_ok() {
+            println!("Successfully sent request to host (PID {})", host.pid);
             return Ok(());
         }
     }
 
     // 3. Fallback: Launch browser
     println!("No running host found. Launching browser...");
-    launch_browser(&magnet)?;
+    launch_browser()?;
 
     Ok(())
 }
@@ -105,7 +126,7 @@ fn find_hosts() -> Result<Vec<RpcInfo>> {
     Ok(hosts)
 }
 
-fn try_send_magnet(info: &RpcInfo, magnet: &str) -> Result<()> {
+fn try_send_request(info: &RpcInfo, mode: &Mode) -> Result<()> {
     let client = Client::new();
     let base_url = format!("http://127.0.0.1:{}", info.port);
 
@@ -116,21 +137,28 @@ fn try_send_magnet(info: &RpcInfo, magnet: &str) -> Result<()> {
         return Err(anyhow::anyhow!("Health check failed"));
     }
 
-    // Send magnet
-    let add_url = format!("{}/add-magnet?token={}", base_url, info.token);
-    let resp = client
-        .post(&add_url)
-        .json(&serde_json::json!({ "magnet": magnet }))
-        .send()?;
+    // Send request
+    let (url, body) = match mode {
+        Mode::Magnet(magnet) => (
+            format!("{}/add-magnet?token={}", base_url, info.token),
+            serde_json::json!({ "magnet": magnet }),
+        ),
+        Mode::Torrent { file_name, contents_base64 } => (
+            format!("{}/add-torrent?token={}", base_url, info.token),
+            serde_json::json!({ "file_name": file_name, "contents_base64": contents_base64 }),
+        ),
+    };
+
+    let resp = client.post(&url).json(&body).send()?;
 
     if resp.status().is_success() {
         Ok(())
     } else {
-        Err(anyhow::anyhow!("Failed to add magnet"))
+        Err(anyhow::anyhow!("Failed to add request"))
     }
 }
 
-fn launch_browser(magnet: &str) -> Result<()> {
+fn launch_browser() -> Result<()> {
     // Try to find the most recently used profile info from disk, even if process is dead
     // For now, let's just try to launch the default browser or a specific one if we can guess.
     
@@ -167,9 +195,8 @@ fn launch_browser(magnet: &str) -> Result<()> {
             // Assuming the design doc implies the extension handles this.
             
             let url = format!(
-                "chrome-extension://{}/magnet-handler.html?magnet={}",
-                ext_id,
-                urlencoding::encode(magnet)
+                "chrome-extension://{}/magnet-handler.html?source=stub",
+                ext_id
             );
             
             println!("Launching browser: {} with URL: {}", info.browser.binary, url);
